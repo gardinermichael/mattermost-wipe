@@ -1,0 +1,46 @@
+#!/bin/bash
+
+
+# Create an executable in /tmp/ and give it the appropriate permissions 
+# vi mm && and chmod 777 mm
+# mysql --user=${CLOUDRON_MYSQL_USERNAME} --password=${CLOUDRON_MYSQL_PASSWORD} --host=${CLOUDRON_MYSQL_HOST} ${CLOUDRON_MYSQL_DATABASE}
+# https://github.com/aljazceru/mattermost-retention/blob/master/mattermost-retention.sh
+# https://gitlab.com/InstitutMaupertuis/mattermost-old-messages/blob/master/README.md
+
+
+# Setup
+delete_before=$(date  --date="3 year ago"  "+%s%3N")
+DATA_PATH="/app/data/files/"
+
+
+# Generate File List
+mysql --user=${CLOUDRON_MYSQL_USERNAME} --password=${CLOUDRON_MYSQL_PASSWORD} --host=${CLOUDRON_MYSQL_HOST} ${CLOUDRON_MYSQL_DATABASE} -e "SELECT path FROM FileInfo \
+WHERE CreateAt < $delete_before;" > /tmp/mattermost-paths.list
+
+mysql --user=${CLOUDRON_MYSQL_USERNAME} --password=${CLOUDRON_MYSQL_PASSWORD} --host=${CLOUDRON_MYSQL_HOST} ${CLOUDRON_MYSQL_DATABASE} -e "SELECT thumbnailpath FROM FileInfo \
+WHERE CreateAt < $delete_before;" >> /tmp/mattermost-paths.list
+
+mysql --user=${CLOUDRON_MYSQL_USERNAME} --password=${CLOUDRON_MYSQL_PASSWORD} --host=${CLOUDRON_MYSQL_HOST} ${CLOUDRON_MYSQL_DATABASE} -e "SELECT previewpath FROM FileInfo \
+WHERE CreateAt < $delete_before;" >> /tmp/mattermost-paths.list
+
+
+# Delete from DB
+mysql --user=${CLOUDRON_MYSQL_USERNAME} --password=${CLOUDRON_MYSQL_PASSWORD} --host=${CLOUDRON_MYSQL_HOST} ${CLOUDRON_MYSQL_DATABASE} -e "DELETE FROM Posts \
+WHERE CreateAt < $delete_before;"
+
+mysql --user=${CLOUDRON_MYSQL_USERNAME} --password=${CLOUDRON_MYSQL_PASSWORD} --host=${CLOUDRON_MYSQL_HOST} ${CLOUDRON_MYSQL_DATABASE} -e "DELETE FROM FileInfo \
+WHERE CreateAt < $delete_before;"
+
+# Delete Files
+while read -r fp; do
+        if [ -n "$fp" ]; then
+                echo "$DATA_PATH""$fp"
+                shred -u "$DATA_PATH""$fp"
+        fi
+done < /tmp/mattermost-paths.list
+
+
+# Cleanup
+# rm /tmp/mattermost-paths.list
+find $DATA_PATH -type d -empty -delete
+exit 0
