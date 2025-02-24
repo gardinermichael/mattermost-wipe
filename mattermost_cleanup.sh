@@ -62,6 +62,7 @@
 
 # Set variables
 delete_before=$(date --date="3 years ago" "+%s%3N") # Delete files older than 3 years
+formatted_delete_before=$(date --date="3 years ago" "+%m/%d/%Y")
 DATA_PATH="/app/data/files/"
 LOG_PARENT="/app/data/WipeLogs"
 LOG_PATH="$LOG_PARENT/$(date +%Y-%m-%d)"
@@ -73,7 +74,7 @@ METADATA_FILE="$LOG_PATH/metadata.log"
 mkdir -p "$LOG_PATH"
 
 echo ""
-echo "===== Mattermost Cleanup Job Started at $(date) =====" | tee -a "$LOG_FILE"
+echo "===== Mattermost Cleanup Job Started at $(date) | Deleting before: $formatted_delete_before =====" | tee -a "$LOG_FILE"
 echo "" | tee -a "$LOG_FILE"
 
 # Generate File List
@@ -146,7 +147,7 @@ echo "File deletion complete. Total files deleted: $TOTAL_FILES" | tee -a "$LOG_
 echo "" | tee -a "$LOG_FILE"
 
 # Write metadata file
-echo "===== Metadata Report for $(date) =====" > "$METADATA_FILE"
+echo "===== Metadata Report for $(date) | Deleting before: $formatted_delete_before =====" > "$METADATA_FILE"
 echo "Total files deleted: $TOTAL_FILES" >> "$METADATA_FILE"
 echo "" >> "$METADATA_FILE"
 echo "File Deletion Breakdown by Extension:" >> "$METADATA_FILE"
