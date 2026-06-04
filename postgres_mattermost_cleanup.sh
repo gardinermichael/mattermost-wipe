@@ -145,7 +145,7 @@ while read -r fp; do
             EXT="${FILE_PATH##*.}"
             [[ "$FILE_PATH" == "$EXT" ]] && EXT="blob"
 
-            ((EXT_COUNT[$EXT]++))
+            EXT_COUNT[$EXT]=$(( ${EXT_COUNT[$EXT]:-0} + 1 ))
 
             # Delete file securely
             shred -u "$FILE_PATH"
